@@ -18,13 +18,18 @@ module JSONTranslate
         I18n.fallbacks[locale]
       end
 
-      def read_json_translation(attr_name, locale = I18n.locale)
+      def read_json_translations(attr_name, all = true)
         translations = public_send("#{attr_name}#{SUFFIX}")
         if translations.is_a?(String) && translations.length > 1
           translations = MultiJson.load(translations, symbolize_keys: true)
         else
           translations = {}
         end
+        translations
+      end
+
+      def read_json_translation(attr_name, locale = I18n.locale)
+        translations = read_json_translations(attr_name)
 
         available = Array(json_translate_fallback_locales(locale)).detect do |available_locale|
           translations[available_locale].present?
@@ -35,12 +40,8 @@ module JSONTranslate
 
       def write_json_translation(attr_name, value, locale = I18n.locale)
         translation_store = "#{attr_name}#{SUFFIX}"
-        translations = public_send(translation_store)
-        if translations.is_a?(String) && translations.length > 1
-            translations = MultiJson.load(translations, symbolize_keys: true)
-        else
-          translations = {}
-        end
+        translations = read_json_translations(attr_name)
+
         public_send("#{translation_store}_will_change!") unless translations[locale] == value
         translations[locale.to_s] = value
         public_send("#{translation_store}=", MultiJson.dump(translations))
@@ -88,6 +89,22 @@ module JSONTranslate
         assigning = assignment.present?
 
         [translated_attr_name, locale, assigning]
+      end
+
+      # Internal: Parse a translation hash convenience accessor name.
+      #
+      # Examples
+      #
+      # parse_translations_accessor("title_all")
+      #
+      # Returns a hash of all available translations
+      def parse_translations_accessor(method_name)
+        return unless /\A(?<attribute>[a-z_]+)_(?<all>all?)\z/ =~ method_name
+
+        translated_attr_name = attribute.to_sym
+        return unless translated_attribute_names.include?(translated_attr_name)
+
+        [translated_attr_name, all.present?]
       end
 
       def toggle_fallback(enabled)
