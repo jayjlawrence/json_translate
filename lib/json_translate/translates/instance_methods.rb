@@ -19,21 +19,31 @@ module JSONTranslate
       end
 
       def read_json_translation(attr_name, locale = I18n.locale)
-        translations = public_send("#{attr_name}#{SUFFIX}") || {}
-
-        available = Array(json_translate_fallback_locales(locale)).detect do |available_locale|
-          translations[available_locale.to_s].present?
+        translations = public_send("#{attr_name}#{SUFFIX}")
+        if translations.is_a?(String) && translations.length > 1
+          translations = MultiJson.load(translations, symbolize_keys: true)
+        else
+          translations = {}
         end
 
-        translations[available.to_s]
+        available = Array(json_translate_fallback_locales(locale)).detect do |available_locale|
+          translations[available_locale].present?
+        end
+
+        translations[available]
       end
 
       def write_json_translation(attr_name, value, locale = I18n.locale)
         translation_store = "#{attr_name}#{SUFFIX}"
-        translations = public_send(translation_store) || {}
-        public_send("#{translation_store}_will_change!") unless translations[locale.to_s] == value
+        translations = public_send(translation_store)
+        if translations.is_a?(String) && translations.length > 1
+            translations = MultiJson.load(translations, symbolize_keys: true)
+        else
+          translations = {}
+        end
+        public_send("#{translation_store}_will_change!") unless translations[locale] == value
         translations[locale.to_s] = value
-        public_send("#{translation_store}=", translations)
+        public_send("#{translation_store}=", MultiJson.dump(translations))
         value
       end
 

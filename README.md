@@ -1,12 +1,11 @@
-[![Gem Version](https://badge.fury.io/rb/json_translate.svg)](https://badge.fury.io/rb/json_translate)
-[![Build Status](https://api.travis-ci.org/cfabianski/json_translate.png)](https://travis-ci.org/cfabianski/json_translate)
-[![License](http://img.shields.io/badge/license-mit-brightgreen.svg)](COPYRIGHT)
-[![Code Climate](https://codeclimate.com/github/cfabianski/json_translate.png)](https://codeclimate.com/github/cfabianski/json_translate)
+# JSON Translate SQL
 
-# JSON Translate
+Note - I propose this be called json_translate_sql - this document has been updated to reflect most of the changes. The
+actual gem spec and file organization has not been updated. A TODO when I have a bit more time.
 
-Rails I18n library for ActiveRecord model/data translation using PostgreSQL's
-JSONB datatype. It provides an interface inspired by
+Rails I18n library for ActiveRecord model/data translation using any database's
+string or text datatype. This is a quick adaptation of json_translate to remove the
+Postgres JsonB requirement and replace it with MultiJson calls. It provides an interface inspired by
 [Globalize3](https://github.com/svenfuchs/globalize3) but removes the need to
 maintain separate translation tables.
 
@@ -14,10 +13,11 @@ maintain separate translation tables.
 
 * ActiveRecord >= 4.2.0
 * I18n
+* MultiJson
 
 ## Installation
 
-gem install json_translate
+gem install json_translate_sql
 
 When using bundler, put it in your Gemfile:
 
@@ -27,7 +27,7 @@ source 'https://rubygems.org'
 gem 'activerecord'
 gem 'pg', :platform => :ruby
 gem 'activerecord-jdbcpostgresql-adapter', :platform => :jruby
-gem 'json_translate'
+gem 'json_translate_sql'
 ```
 
 ## Model translations
@@ -72,8 +72,8 @@ your translated attributes, using the suffix "_translations":
 class CreatePosts < ActiveRecord::Migration
   def up
     create_table :posts do |t|
-      t.column :title_translations, 'jsonb'
-      t.column :body_translations,  'jsonb'
+      t.column :title_translations, :string
+      t.column :body_translations, :string
       t.timestamps
     end
   end
