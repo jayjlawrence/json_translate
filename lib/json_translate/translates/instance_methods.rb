@@ -43,7 +43,7 @@ module JSONTranslate
         translations = read_json_translations(attr_name)
 
         public_send("#{translation_store}_will_change!") unless translations[locale] == value
-        translations[locale.to_s] = value
+        translations[locale.to_sym] = value
         public_send("#{translation_store}=", MultiJson.dump(translations))
         value
       end
